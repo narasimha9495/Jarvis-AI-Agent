@@ -59,3 +59,7 @@ testpaths = ["tests"]
 
 [tool.setuptools.packages.find]
 include = ["app*"]
+[project.urls]
+Homepage = "https://github.com/narasimha9495/Jarvis-AI-Agent"
+Repository = "https://github.com/narasimha9495/Jarvis-AI-Agent"
+Issues = "https://github.com/narasimha9495/Jarvis-AI-Agent/issues"
