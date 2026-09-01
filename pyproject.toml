@@ -63,3 +63,10 @@ include = ["app*"]
 Homepage = "https://github.com/narasimha9495/Jarvis-AI-Agent"
 Repository = "https://github.com/narasimha9495/Jarvis-AI-Agent"
 Issues = "https://github.com/narasimha9495/Jarvis-AI-Agent/issues"
+[tool.coverage.run]
+source = ["app"]
+omit = ["app/providers/*"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 70
