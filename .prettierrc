@@ -1,0 +1,31 @@
+﻿# Jarvis AI — Provider Setup
+
+## Gemini (Default)
+1. Go to https://ai.google.dev/
+2. Create an API key
+3. Set GEMINI_API_KEY in .env
+
+## OpenAI
+1. Go to https://platform.openai.com/api-keys
+2. Create a key
+3. Set OPENAI_API_KEY in .env
+4. Set DEFAULT_PROVIDER=openai
+
+## Ollama (Local)
+1. Install Ollama: https://ollama.com
+2. Pull a model: ollama pull llama3
+3. Set DEFAULT_PROVIDER=ollama in .env
+"@ | Set-Content -Path "docs\PROVIDERS.md" -Encoding UTF8
+git add docs\PROVIDERS.md
+git commit --author="narasimha9495 <183414038+narasimha9495@users.noreply.github.com>" -m "docs: Add LLM provider setup instructions for Gemini, OpenAI, Ollama"
+
+# Sep 13 - commit 2
+2026-09-13T11:00:00+0530="2026-09-13T17:00:00+0530"; 2026-09-13T11:00:00+0530=2026-09-13T11:00:00+0530
+@"
+{
+  "semi": true,
+  "singleQuote": true,
+  "tabWidth": 2,
+  "trailingComma": "es5",
+  "printWidth": 100
+}
