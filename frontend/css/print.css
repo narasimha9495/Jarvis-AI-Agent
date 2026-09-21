@@ -1,0 +1,7 @@
+﻿/* Jarvis AI — Print Styles */
+@media print {
+  .sidebar-left, .sidebar-right, .top-bar, .input-area, .mood-bar { display: none !important; }
+  .chat-container { width: 100%; }
+  .message-bubble { border: 1px solid #ccc; box-shadow: none; }
+  body { background: white; color: black; }
+}
