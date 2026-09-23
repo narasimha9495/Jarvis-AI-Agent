@@ -1,0 +1,10 @@
+﻿{
+  "name": "jarvis-ai-frontend",
+  "version": "1.2.0",
+  "description": "Frontend for Jarvis AI Assistant",
+  "private": true,
+  "scripts": {
+    "dev": "live-server frontend/ --port=3000",
+    "lint": "eslint frontend/js/"
+  }
+}
