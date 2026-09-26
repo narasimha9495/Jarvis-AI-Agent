@@ -9,15 +9,26 @@ A modular, privacy-first personal productivity AI assistant built with **FastAPI
 
 ## ✨ Features
 
+### Core
 - **Multi-Provider LLM Support** — Switch between Google Gemini, OpenAI, and Ollama (local/offline)
 - **Real-time Chat** — WebSocket-powered live conversation with your AI assistant
-- **Task Management** — Create, list, complete, and delete personal tasks
-- **Reminders** — Set time-based reminders with natural language
-- **Quick Notes** — Create and search notes with tags
-- **Web Search** — Search the web via DuckDuckGo (no API key needed)
 - **Safety Engine** — Risk-level assessment with confirmation for destructive actions
 - **Privacy-First** — Local STT (Whisper), local TTS (pyttsx3), secrets in `.env`
 - **Modern Dashboard** — Iron Man Jarvis-inspired dark UI with real-time updates
+
+### Productivity
+- **Task Management** — Create, list, complete, and delete personal tasks
+- **Reminders** — Set time-based reminders with natural language
+- **Quick Notes** — Create and search notes with tags
+- **Pomodoro Timer** — Focus sessions with configurable work/break durations and stats
+- **Habit Tracker** — Track daily habits, build streaks, view completion reports
+- **Daily Summary** — AI-generated productivity reports with a 0–100 score
+
+### Utilities
+- **Web Search** — Search the web via DuckDuckGo (no API key needed)
+- **Weather Updates** — Current weather + 3-day forecast via Open-Meteo (no API key needed)
+- **Expense Tracker** — Log expenses, categorize spending, view summaries by period
+- **System Monitor** — Real-time CPU, RAM, disk, battery stats and alerts
 
 ---
 
@@ -44,7 +55,13 @@ app/
 │   ├── tasks.py         # Task CRUD
 │   ├── reminders.py     # Reminder management
 │   ├── notes.py         # Notes with search
-│   └── search.py        # Web search
+│   ├── search.py        # Web search
+│   ├── weather.py       # Weather forecasts (Open-Meteo)
+│   ├── expenses.py      # Expense tracking
+│   ├── pomodoro.py      # Focus timer
+│   ├── habits.py        # Habit tracking with streaks
+│   ├── system_monitor.py # CPU/RAM/disk monitoring
+│   └── daily_summary.py # Productivity reports
 ├── db/
 │   ├── database.py      # Async SQLite setup
 │   └── models.py        # SQLAlchemy models
