@@ -36,17 +36,38 @@ ACTION_RISK_MAP: dict[str, RiskLevel] = {
     "list_notes": RiskLevel.SAFE,
     "search_notes": RiskLevel.SAFE,
     "search_web": RiskLevel.SAFE,
-    
+    "get_weather": RiskLevel.SAFE,
+    "list_expenses": RiskLevel.SAFE,
+    "spending_summary": RiskLevel.SAFE,
+    "pomodoro_status": RiskLevel.SAFE,
+    "pomodoro_stats": RiskLevel.SAFE,
+    "list_habits": RiskLevel.SAFE,
+    "habit_report": RiskLevel.SAFE,
+    "system_status": RiskLevel.SAFE,
+    "cpu_alert": RiskLevel.SAFE,
+    "disk_alert": RiskLevel.SAFE,
+    "top_processes": RiskLevel.SAFE,
+    "generate_summary": RiskLevel.SAFE,
+    "weekly_report": RiskLevel.SAFE,
+
     # Moderate actions - create/update
     "create_task": RiskLevel.MODERATE,
     "complete_task": RiskLevel.MODERATE,
     "create_reminder": RiskLevel.MODERATE,
     "dismiss_reminder": RiskLevel.MODERATE,
     "create_note": RiskLevel.MODERATE,
-    
+    "add_expense": RiskLevel.MODERATE,
+    "start_pomodoro": RiskLevel.MODERATE,
+    "complete_pomodoro": RiskLevel.MODERATE,
+    "stop_pomodoro": RiskLevel.MODERATE,
+    "create_habit": RiskLevel.MODERATE,
+    "log_habit": RiskLevel.MODERATE,
+
     # Dangerous actions - destructive
     "delete_task": RiskLevel.DANGEROUS,
     "delete_note": RiskLevel.DANGEROUS,
+    "delete_expense": RiskLevel.DANGEROUS,
+    "delete_habit": RiskLevel.DANGEROUS,
 }
 
 # Actions that are completely blocked
