@@ -241,6 +241,94 @@ function refreshSidebar() {
     loadTasks();
     loadReminders();
     loadNotes();
+    loadExpenses();
+    loadHabits();
+    loadSystemStatus();
+}
+
+// ── Expense Loading ──
+async function loadExpenses() {
+    try {
+        const res = await fetch(`${API_BASE}/expenses`);
+        const data = await res.json();
+        const expenses = data.expenses || [];
+        const container = document.getElementById('expensesList');
+        if (!container) return;
+        container.innerHTML = expenses.length ? '' : '<p class="empty">No expenses yet</p>';
+
+        expenses.forEach(exp => {
+            const div = document.createElement('div');
+            div.className = 'sidebar-item';
+            div.innerHTML = `
+                <div class="item-header">
+                    <span class="item-title">💰 $${exp.amount.toFixed(2)}</span>
+                    <span class="priority priority-${exp.category}">${exp.category}</span>
+                </div>
+                ${exp.description ? `<p class="item-desc">${exp.description}</p>` : ''}
+                <p class="item-desc" style="font-size:11px;">${exp.date}</p>
+            `;
+            container.appendChild(div);
+        });
+
+        // Update summary
+        const summaryEl = document.getElementById('expensesSummary');
+        if (summaryEl && data.total !== undefined) {
+            summaryEl.textContent = `Total: $${data.total.toFixed(2)} (${expenses.length} items)`;
+        }
+    } catch (e) {
+        console.error('Failed to load expenses:', e);
+    }
+}
+
+// ── Habit Loading ──
+async function loadHabits() {
+    try {
+        const res = await fetch(`${API_BASE}/habits`);
+        const data = await res.json();
+        const habits = data.habits || [];
+        const container = document.getElementById('habitsList');
+        if (!container) return;
+        container.innerHTML = habits.length ? '' : '<p class="empty">No habits yet</p>';
+
+        habits.forEach(habit => {
+            const div = document.createElement('div');
+            div.className = 'sidebar-item';
+            div.innerHTML = `
+                <div class="item-header">
+                    <span class="item-title">✅ ${habit.name}</span>
+                    <span class="priority priority-high">🔥 ${habit.current_streak}d</span>
+                </div>
+                <p class="item-desc">${habit.total_completions} total | ${habit.frequency}</p>
+                <button class="btn-delete" onclick="logHabit(${habit.id})" title="Log today" style="right:30px;display:block;">✓</button>
+            `;
+            container.appendChild(div);
+        });
+    } catch (e) {
+        console.error('Failed to load habits:', e);
+    }
+}
+
+async function logHabit(id) {
+    await fetch(`${API_BASE}/habits/${id}/log`, { method: 'POST' });
+    loadHabits();
+}
+
+// ── System Status ──
+async function loadSystemStatus() {
+    try {
+        const res = await fetch(`${API_BASE}/system/status`);
+        const data = await res.json();
+        if (data.success) {
+            const cpu = document.getElementById('sysCpu');
+            const ram = document.getElementById('sysRam');
+            const disk = document.getElementById('sysDisk');
+            if (cpu) cpu.textContent = `CPU: ${data.cpu_percent}%`;
+            if (ram) ram.textContent = `RAM: ${data.memory.percent}%`;
+            if (disk) disk.textContent = `DISK: ${data.disk.percent}%`;
+        }
+    } catch (e) {
+        console.error('Failed to load system status:', e);
+    }
 }
 
 // ── Task Actions ──
@@ -260,12 +348,19 @@ function quickAction(action) {
         'new-task': 'Create a new task: ',
         'set-reminder': 'Set a reminder: ',
         'new-note': 'Create a note: ',
-        'web-search': 'Search the web for: '
+        'web-search': 'Search the web for: ',
+        'weather': 'What is the weather in ',
+        'add-expense': 'Add expense: $',
+        'pomodoro': 'Start a pomodoro for: ',
+        'log-habit': 'Log habit: ',
+        'daily-summary': 'Give me my daily productivity summary',
     };
     const input = document.getElementById('messageInput');
     if(input) {
         input.value = prompts[action] || '';
         input.focus();
+        // Auto-send for daily summary
+        if (action === 'daily-summary') sendMessage();
     }
 }
 
