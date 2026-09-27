@@ -102,3 +102,30 @@ class WebSocketMessage(BaseModel):
     action: str | None = None
     params: dict | None = None
     requires_confirmation: bool = False
+
+class ExpenseCreate(BaseModel):
+    amount: float
+    category: str = "general"
+    description: str = ""
+    date: str | None = None
+
+class ExpenseResponse(BaseModel):
+    id: int
+    amount: float
+    category: str
+    description: str
+    date: str
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+class HabitCreate(BaseModel):
+    name: str
+    frequency: str = "daily"
+
+class HabitResponse(BaseModel):
+    id: int
+    name: str
+    frequency: str
+    active: bool
+    created_at: datetime
+    model_config = {"from_attributes": True}
