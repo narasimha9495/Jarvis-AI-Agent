@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jarvis-ai-agent"
+version = "1.0.0"
+description = "A modular, privacy-first personal productivity AI assistant"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.11"
+authors = [
+    {name = "narasimha9495", email = "budhilreddy024@gmail.com"}
+]
+keywords = ["ai", "assistant", "productivity", "fastapi", "llm", "gemini", "openai", "ollama"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Framework :: FastAPI",
+]
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "sqlalchemy>=2.0.0",
+    "aiosqlite>=0.20.0",
+    "google-generativeai>=0.8.0",
+    "openai>=1.50.0",
+    "ollama>=0.3.0",
+    "httpx>=0.27.0",
+    "psutil>=5.9.0",
+]
+
+[project.optional-dependencies]
+speech = [
+    "openai-whisper>=20231117",
+    "pyttsx3>=2.90",
+]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "httpx>=0.27.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/narasimha9495/Jarvis-AI-Agent"
+Repository = "https://github.com/narasimha9495/Jarvis-AI-Agent"
+Issues = "https://github.com/narasimha9495/Jarvis-AI-Agent/issues"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
