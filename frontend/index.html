@@ -602,14 +602,19 @@
                 <button class="btn" onclick="quickAction('set-reminder')">🔔 Set Reminder</button>
                 <button class="btn" onclick="quickAction('new-note')">📝 Create Note</button>
                 <button class="btn" onclick="quickAction('web-search')">🌐 Web Search</button>
+                <button class="btn" onclick="quickAction('weather')">🌤️ Weather</button>
+                <button class="btn" onclick="quickAction('add-expense')">💰 Add Expense</button>
+                <button class="btn" onclick="quickAction('pomodoro')">⏱️ Pomodoro</button>
+                <button class="btn" onclick="quickAction('log-habit')">✅ Log Habit</button>
             </div>
             
-            <div class="section-title" style="margin-top: 20px;">System Info</div>
+            <div class="section-title" style="margin-top: 20px;">System</div>
             <div style="font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); line-height: 1.8;">
-                <div>SYS.CORE: ONLINE</div>
-                <div>MEM.UTIL: OPTIMAL</div>
-                <div>SEC.PROTO: ACTIVE</div>
+                <div id="sysCpu">CPU: Loading...</div>
+                <div id="sysRam">RAM: Loading...</div>
+                <div id="sysDisk">DISK: Loading...</div>
             </div>
+            <button class="btn" style="margin-top: 10px; font-size: 11px;" onclick="quickAction('daily-summary')">📊 Daily Summary</button>
         </aside>
 
         <!-- Center: Chat Interface -->
@@ -642,6 +647,8 @@
                 <button class="tab-btn active" data-tab="tasks" onclick="switchTab('tasks')">Tasks</button>
                 <button class="tab-btn" data-tab="reminders" onclick="switchTab('reminders')">Reminders</button>
                 <button class="tab-btn" data-tab="notes" onclick="switchTab('notes')">Notes</button>
+                <button class="tab-btn" data-tab="expenses" onclick="switchTab('expenses')">Expenses</button>
+                <button class="tab-btn" data-tab="habits" onclick="switchTab('habits')">Habits</button>
             </div>
             
             <div id="tasksPanel" class="tab-panel active">
@@ -654,6 +661,15 @@
             
             <div id="notesPanel" class="tab-panel">
                 <div id="notesList"></div>
+            </div>
+
+            <div id="expensesPanel" class="tab-panel">
+                <div id="expensesSummary" style="padding: 8px; font-family: var(--font-mono); font-size: 12px; color: var(--accent-blue); border-bottom: 1px solid var(--border-color); margin-bottom: 8px;">Loading summary...</div>
+                <div id="expensesList"></div>
+            </div>
+
+            <div id="habitsPanel" class="tab-panel">
+                <div id="habitsList"></div>
             </div>
         </aside>
     </div>
