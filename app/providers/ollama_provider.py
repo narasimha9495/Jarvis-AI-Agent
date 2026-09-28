@@ -1,9 +1,11 @@
 """Ollama LLM provider implementation."""
 
+import logging
 from typing import AsyncIterator
-import ollama
 
 from app.providers.base import BaseLLMProvider
+
+logger = logging.getLogger(__name__)
 
 
 class OllamaProvider(BaseLLMProvider):
@@ -18,7 +20,14 @@ class OllamaProvider(BaseLLMProvider):
         """
         self.base_url = base_url
         self.model_name = model_name
-        self.client = ollama.AsyncClient(host=base_url)
+        self._client = None
+
+    def _get_client(self):
+        """Lazy-initialize the Ollama async client."""
+        if self._client is None:
+            import ollama
+            self._client = ollama.AsyncClient(host=self.base_url)
+        return self._client
 
     async def generate(self, prompt: str, system_prompt: str = "") -> str:
         """Generate a response using Ollama."""
@@ -28,13 +37,16 @@ class OllamaProvider(BaseLLMProvider):
         messages.append({"role": "user", "content": prompt})
         
         try:
-            response = await self.client.chat(
+            client = self._get_client()
+            response = await client.chat(
                 model=self.model_name,
                 messages=messages
             )
             return response.get('message', {}).get('content', '')
+        except ImportError:
+            raise RuntimeError("ollama is not installed. Run: pip install ollama")
         except Exception as e:
-            raise RuntimeError(f"Ollama generation failed: {str(e)}") from e
+            raise RuntimeError(f"Ollama generation failed: {e}") from e
 
     async def generate_stream(self, prompt: str, system_prompt: str = "") -> AsyncIterator[str]:
         """Stream a response using Ollama."""
@@ -44,7 +56,8 @@ class OllamaProvider(BaseLLMProvider):
         messages.append({"role": "user", "content": prompt})
         
         try:
-            stream = await self.client.chat(
+            client = self._get_client()
+            stream = await client.chat(
                 model=self.model_name,
                 messages=messages,
                 stream=True
@@ -53,13 +66,16 @@ class OllamaProvider(BaseLLMProvider):
                 content = chunk.get('message', {}).get('content', '')
                 if content:
                     yield content
+        except ImportError:
+            raise RuntimeError("ollama is not installed.")
         except Exception as e:
-            raise RuntimeError(f"Ollama streaming failed: {str(e)}") from e
+            raise RuntimeError(f"Ollama streaming failed: {e}") from e
 
     async def health_check(self) -> bool:
-        """Check if Ollama is reachable and functional."""
+        """Check if Ollama is reachable."""
         try:
-            await self.client.list()
+            client = self._get_client()
+            await client.list()
             return True
         except Exception:
             return False
