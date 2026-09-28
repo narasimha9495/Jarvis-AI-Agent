@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
 from app.actions.base import BaseAction
 
@@ -30,7 +30,7 @@ class PomodoroAction(BaseAction):
             
             self._sessions[session_id] = {
                 "task": task,
-                "start_time": datetime.utcnow(),
+                "start_time": datetime.now(timezone.utc),
                 "duration": duration,
                 "break_duration": break_duration,
                 "status": "focusing",
@@ -51,7 +51,7 @@ class PomodoroAction(BaseAction):
                 return {"success": False, "error": "Invalid or missing session_id"}
                 
             session = self._sessions[session_id]
-            elapsed = datetime.utcnow() - session["start_time"]
+            elapsed = datetime.now(timezone.utc) - session["start_time"]
             elapsed_minutes = int(elapsed.total_seconds() // 60)
             
             current_phase_duration = session["duration"] if session["status"] == "focusing" else session["break_duration"]
@@ -73,7 +73,7 @@ class PomodoroAction(BaseAction):
             session = self._sessions[session_id]
             session["completed_pomodoros"] += 1
             session["status"] = "break"
-            session["start_time"] = datetime.utcnow()
+            session["start_time"] = datetime.now(timezone.utc)
             
             return {
                 "success": True,
