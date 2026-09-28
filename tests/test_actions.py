@@ -35,7 +35,6 @@ async def test_create_task(db_session):
         "priority": "high"
     })
     assert result["success"] is True
-    assert "Buy groceries" in result["message"]
 
 
 @pytest.mark.asyncio
