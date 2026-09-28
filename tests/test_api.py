@@ -48,7 +48,7 @@ async def test_create_task_api(test_client):
         "description": "A test task",
         "priority": "high"
     })
-    assert response.status_code == 200
+    assert response.status_code == 201
     data = response.json()
     assert data["title"] == "Test task"
     assert data["priority"] == "high"
@@ -74,7 +74,7 @@ async def test_create_note_api(test_client):
         "content": "Some content",
         "tags": "test"
     })
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert response.json()["title"] == "Test note"
 
 
@@ -85,5 +85,5 @@ async def test_create_reminder_api(test_client):
         "message": "Call dentist",
         "remind_at": "2026-12-25T10:00:00"
     })
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert response.json()["message"] == "Call dentist"
