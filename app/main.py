@@ -1,8 +1,10 @@
 """Jarvis AI Agent - FastAPI application entry point."""
 
+import logging
 import uvicorn
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pathlib import Path
@@ -12,21 +14,39 @@ from app.db.database import init_db
 from app.api.routes import router
 from app.api.websocket import ws_router
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger("jarvis")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application startup and shutdown events."""
-    # Startup
+    logger.info("Starting Jarvis AI Agent...")
     await init_db()
+    logger.info("Database initialized.")
     yield
-    # Shutdown
+    logger.info("Shutting down Jarvis AI Agent.")
 
 
 app = FastAPI(
     title="Jarvis AI Agent",
     description="A modular personal productivity AI assistant",
-    version="1.0.0",
+    version="1.1.0",
     lifespan=lifespan,
+)
+
+# CORS middleware — allow frontend dev server to connect
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Mount static files for frontend
@@ -52,7 +72,7 @@ if __name__ == "__main__":
     settings = get_settings()
     uvicorn.run(
         "app.main:app",
-        host=getattr(settings, "app_host", "127.0.0.1"),
-        port=getattr(settings, "app_port", 8000),
-        reload=getattr(settings, "debug", True),
+        host=settings.app_host,
+        port=settings.app_port,
+        reload=settings.debug,
     )
