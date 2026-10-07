@@ -1,4 +1,4 @@
-"""Safety engine with risk assessment and confirmation flow.
+"""Safety engine with risk assessment, confirmation flow, and rate limiting.
 
 Every action goes through the safety engine before execution.
 Actions are categorized by risk level, and dangerous actions
@@ -6,8 +6,10 @@ are blocked entirely — the assistant never runs shell commands.
 """
 
 import logging
+from collections import defaultdict
+from datetime import datetime, timezone
 from enum import Enum
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +81,19 @@ BLOCKED_ACTIONS: set[str] = {
     "modify_system",
 }
 
+# Rate limiting: max calls per action per minute
+RATE_LIMITS: dict[str, int] = {
+    "search_web": 10,
+    "get_weather": 15,
+    "create_task": 20,
+    "create_reminder": 20,
+    "add_expense": 30,
+    "delete_task": 5,
+    "delete_expense": 5,
+    "delete_habit": 5,
+}
+DEFAULT_RATE_LIMIT = 60  # per minute
+
 
 class SafetyEngine:
     """Evaluates actions for safety before execution.
@@ -89,7 +104,36 @@ class SafetyEngine:
     - DANGEROUS: Require explicit user confirmation (delete operations)
     
     Blocked actions are never allowed regardless of confirmation.
+    Includes per-action rate limiting to prevent abuse.
     """
+
+    def __init__(self):
+        # Track action call timestamps for rate limiting
+        self._action_log: dict[str, list[datetime]] = defaultdict(list)
+
+    def _check_rate_limit(self, action_name: str) -> bool:
+        """Check if the action is within its rate limit.
+        
+        Args:
+            action_name: The action to check.
+            
+        Returns:
+            True if allowed, False if rate limited.
+        """
+        now = datetime.now(timezone.utc)
+        limit = RATE_LIMITS.get(action_name, DEFAULT_RATE_LIMIT)
+
+        # Clean old entries (older than 60 seconds)
+        self._action_log[action_name] = [
+            ts for ts in self._action_log[action_name]
+            if (now - ts).total_seconds() < 60
+        ]
+
+        if len(self._action_log[action_name]) >= limit:
+            return False
+
+        self._action_log[action_name].append(now)
+        return True
 
     async def check_action(
         self, action_name: str, params: dict | None = None
@@ -112,6 +156,16 @@ class SafetyEngine:
                 requires_confirmation=False,
                 message=f"Action '{action_name}' is blocked for safety reasons. "
                         f"This assistant does not execute system commands.",
+            )
+
+        # Check rate limit
+        if not self._check_rate_limit(action_name):
+            logger.warning(f"Rate limited action: {action_name}")
+            return SafetyCheck(
+                allowed=False,
+                risk_level=RiskLevel.MODERATE,
+                requires_confirmation=False,
+                message=f"Action '{action_name}' is rate limited. Please wait a moment.",
             )
 
         # Look up risk level
