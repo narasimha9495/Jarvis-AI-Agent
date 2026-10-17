@@ -1,20 +1,179 @@
 /**
- * Jarvis AI Agent - Frontend Application
- * Handles WebSocket communication, UI updates, and action management.
+ * Jarvis AI Agent — Personalised Frontend
+ * Features: themes, AI personality, chat history, mood system, smart suggestions
  */
 
 // ── Configuration ──
 const WS_URL = `ws://${window.location.host}/ws`;
 const API_BASE = '/api';
+const STORAGE_KEY = 'jarvis_settings';
+const HISTORY_KEY = 'jarvis_chat_history';
 
 // ── State ──
 let ws = null;
 let isConnected = false;
 let pendingConfirmation = null;
 let currentProvider = 'gemini';
+let messageCount = 0;
 
-// ── DOM Elements ──
-// (get references to all key elements on DOMContentLoaded)
+// ── Default Settings ──
+const defaultSettings = {
+    userName: 'Narasimha',
+    theme: 'dark',
+    personality: 'friendly',
+    responseStyle: 'balanced',
+};
+
+let settings = loadSettings();
+
+// ── Settings Persistence ──
+function loadSettings() {
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        return saved ? { ...defaultSettings, ...JSON.parse(saved) } : { ...defaultSettings };
+    } catch {
+        return { ...defaultSettings };
+    }
+}
+
+function saveSettings() {
+    const nameEl = document.getElementById('userName');
+    const personalityEl = document.getElementById('aiPersonality');
+    const styleEl = document.getElementById('responseStyle');
+
+    if (nameEl) settings.userName = nameEl.value || 'User';
+    if (personalityEl) settings.personality = personalityEl.value;
+    if (styleEl) settings.responseStyle = styleEl.value;
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    applySettings();
+}
+
+function applySettings() {
+    // Update greeting
+    const nameEl = document.getElementById('greetingName');
+    if (nameEl) nameEl.textContent = settings.userName;
+
+    // Update settings inputs
+    const userNameInput = document.getElementById('userName');
+    if (userNameInput && userNameInput.value !== settings.userName) {
+        userNameInput.value = settings.userName;
+    }
+
+    const personalityEl = document.getElementById('aiPersonality');
+    if (personalityEl) personalityEl.value = settings.personality;
+
+    const styleEl = document.getElementById('responseStyle');
+    if (styleEl) styleEl.value = settings.responseStyle;
+
+    // Update theme buttons
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.theme === settings.theme);
+    });
+}
+
+// ── Theme System ──
+function setTheme(theme) {
+    document.body.dataset.theme = theme;
+    settings.theme = theme;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+
+    const toggle = document.getElementById('themeToggle');
+    if (toggle) {
+        toggle.textContent = theme === 'light' ? '☀️' : theme === 'midnight' ? '🌌' : '🌙';
+    }
+
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.theme === theme);
+    });
+}
+
+function toggleTheme() {
+    const themes = ['dark', 'midnight', 'light'];
+    const idx = themes.indexOf(settings.theme);
+    setTheme(themes[(idx + 1) % themes.length]);
+}
+
+// ── Greeting System ──
+function updateGreeting() {
+    const hour = new Date().getHours();
+    let greeting;
+    if (hour < 6) greeting = 'Good Night';
+    else if (hour < 12) greeting = 'Good Morning';
+    else if (hour < 17) greeting = 'Good Afternoon';
+    else if (hour < 21) greeting = 'Good Evening';
+    else greeting = 'Good Night';
+
+    const el = document.getElementById('greetingTime');
+    if (el) el.textContent = greeting;
+
+    const dateEl = document.getElementById('greetingDate');
+    if (dateEl) {
+        dateEl.textContent = new Date().toLocaleDateString('en-US', {
+            weekday: 'long', month: 'short', day: 'numeric'
+        });
+    }
+}
+
+function getWelcomeMessage() {
+    const hour = new Date().getHours();
+    const name = settings.userName;
+    const messages = {
+        professional: `Welcome back, ${name}. All systems are operational. How may I assist you today?`,
+        friendly: `Hey ${name}! 😊 Great to see you! I'm ready to help with whatever you need today.`,
+        casual: `Yo ${name}! What's up? Ready to get stuff done? 🚀`,
+        motivational: `${name}! 💪 Every moment is a fresh start. Let's make today count! What's on the agenda?`,
+    };
+    return messages[settings.personality] || messages.friendly;
+}
+
+// ── Mood System ──
+const moods = [
+    { emoji: '😊', text: 'Ready to help', threshold: 0 },
+    { emoji: '🤔', text: 'Thinking deeply', threshold: 3 },
+    { emoji: '💡', text: 'Full of ideas', threshold: 6 },
+    { emoji: '🔥', text: 'On fire!', threshold: 10 },
+    { emoji: '🧠', text: 'Deep focus mode', threshold: 15 },
+    { emoji: '⚡', text: 'Supercharged!', threshold: 20 },
+];
+
+function updateMood() {
+    const mood = [...moods].reverse().find(m => messageCount >= m.threshold) || moods[0];
+    const emojiEl = document.getElementById('moodEmoji');
+    const textEl = document.getElementById('moodText');
+    if (emojiEl) emojiEl.textContent = mood.emoji;
+    if (textEl) textEl.textContent = mood.text;
+}
+
+// ── Chat History ──
+function saveChatHistory() {
+    try {
+        const messages = document.getElementById('chatMessages');
+        if (!messages) return;
+        const items = [];
+        messages.querySelectorAll('.message').forEach(msg => {
+            const role = msg.classList.contains('user') ? 'user' : 'assistant';
+            const content = msg.querySelector('.message-content')?.textContent || '';
+            const time = msg.querySelector('.message-time')?.textContent || '';
+            if (content) items.push({ role, content, time });
+        });
+        // Keep last 50 messages
+        const trimmed = items.slice(-50);
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(trimmed));
+    } catch { /* storage full, ignore */ }
+}
+
+function loadChatHistory() {
+    try {
+        const saved = localStorage.getItem(HISTORY_KEY);
+        if (!saved) return;
+        const items = JSON.parse(saved);
+        // Only restore last 20 messages to keep it clean
+        items.slice(-20).forEach(item => {
+            addMessage(item.role, item.content, item.time, true);
+        });
+    } catch { /* corrupt data, ignore */ }
+}
 
 // ── WebSocket ──
 function connectWebSocket() {
@@ -34,7 +193,6 @@ function connectWebSocket() {
     ws.onclose = () => {
         isConnected = false;
         updateConnectionStatus(false);
-        // Reconnect after 3 seconds
         setTimeout(connectWebSocket, 3000);
     };
     
@@ -50,10 +208,14 @@ function handleMessage(data) {
     switch (data.type) {
         case 'chat':
             addMessage('assistant', data.content);
+            messageCount++;
+            updateMood();
             break;
         case 'action':
             addMessage('assistant', data.content);
             refreshSidebar();
+            messageCount++;
+            updateMood();
             break;
         case 'confirm':
             showConfirmation(data);
@@ -75,11 +237,15 @@ function sendMessage() {
     
     addMessage('user', text);
     showTypingIndicator();
+    messageCount++;
+    updateMood();
     
     ws.send(JSON.stringify({
         type: 'chat',
         content: text,
-        provider: currentProvider
+        provider: currentProvider,
+        personality: settings.personality,
+        response_style: settings.responseStyle,
     }));
     
     input.value = '';
@@ -87,27 +253,30 @@ function sendMessage() {
 }
 
 // ── UI Functions ──
-function addMessage(role, content) {
+function addMessage(role, content, customTime = null, skipSave = false) {
     const container = document.getElementById('chatMessages');
     const div = document.createElement('div');
     div.className = `message ${role}`;
     
-    // Support markdown-like formatting
     const formatted = content
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.*?)\*/g, '<em>$1</em>')
         .replace(/`(.*?)`/g, '<code>$1</code>')
         .replace(/\n/g, '<br>');
     
+    const timeStr = customTime || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
     div.innerHTML = `
         <div class="message-bubble">
             <div class="message-content">${formatted}</div>
-            <div class="message-time">${new Date().toLocaleTimeString()}</div>
+            <div class="message-time">${timeStr}</div>
         </div>
     `;
     
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
+
+    if (!skipSave) saveChatHistory();
 }
 
 function showTypingIndicator() {
@@ -157,6 +326,27 @@ function closeModal() {
     const modal = document.getElementById('confirmModal');
     if (modal) modal.classList.remove('visible');
     pendingConfirmation = null;
+}
+
+// ── Settings Modal ──
+function openSettings() {
+    applySettings();
+    const modal = document.getElementById('settingsModal');
+    if (modal) modal.classList.add('visible');
+}
+
+function closeSettings() {
+    const modal = document.getElementById('settingsModal');
+    if (modal) modal.classList.remove('visible');
+}
+
+// ── Smart Suggestions ──
+function useSuggestion(text) {
+    const input = document.getElementById('messageInput');
+    if (input) {
+        input.value = text;
+        sendMessage();
+    }
 }
 
 // ── Sidebar Data Loading ──
@@ -270,7 +460,6 @@ async function loadExpenses() {
             container.appendChild(div);
         });
 
-        // Update summary
         const summaryEl = document.getElementById('expensesSummary');
         if (summaryEl && data.total !== undefined) {
             summaryEl.textContent = `Total: $${data.total.toFixed(2)} (${expenses.length} items)`;
@@ -319,12 +508,23 @@ async function loadSystemStatus() {
         const res = await fetch(`${API_BASE}/system/status`);
         const data = await res.json();
         if (data.success) {
+            const cpuVal = data.cpu_percent;
+            const ramVal = data.memory.percent;
+            const diskVal = data.disk.percent;
+
             const cpu = document.getElementById('sysCpu');
             const ram = document.getElementById('sysRam');
             const disk = document.getElementById('sysDisk');
-            if (cpu) cpu.textContent = `CPU: ${data.cpu_percent}%`;
-            if (ram) ram.textContent = `RAM: ${data.memory.percent}%`;
-            if (disk) disk.textContent = `DISK: ${data.disk.percent}%`;
+            const cpuBar = document.getElementById('cpuBar');
+            const ramBar = document.getElementById('ramBar');
+            const diskBar = document.getElementById('diskBar');
+
+            if (cpu) cpu.textContent = `${cpuVal}%`;
+            if (ram) ram.textContent = `${ramVal}%`;
+            if (disk) disk.textContent = `${diskVal}%`;
+            if (cpuBar) cpuBar.style.width = `${cpuVal}%`;
+            if (ramBar) ramBar.style.width = `${ramVal}%`;
+            if (diskBar) diskBar.style.width = `${diskVal}%`;
         }
     } catch (e) {
         console.error('Failed to load system status:', e);
@@ -359,7 +559,6 @@ function quickAction(action) {
     if(input) {
         input.value = prompts[action] || '';
         input.focus();
-        // Auto-send for daily summary
         if (action === 'daily-summary') sendMessage();
     }
 }
@@ -388,6 +587,19 @@ function switchProvider(provider) {
 
 // ── Initialize ──
 document.addEventListener('DOMContentLoaded', () => {
+    // Apply saved settings
+    setTheme(settings.theme);
+    applySettings();
+    updateGreeting();
+    updateMood();
+
+    // Load chat history
+    loadChatHistory();
+
+    // Add personalised welcome
+    addMessage('assistant', getWelcomeMessage());
+
+    // Connect & load data
     connectWebSocket();
     refreshSidebar();
     
@@ -418,4 +630,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }).catch(() => {});
+
+    // Update greeting every minute
+    setInterval(updateGreeting, 60000);
+
+    // Refresh system stats every 30 seconds
+    setInterval(loadSystemStatus, 30000);
 });
