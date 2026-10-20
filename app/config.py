@@ -1,7 +1,4 @@
-"""Application configuration using pydantic-settings.
 
-Loads settings from .env file and environment variables.
-"""
 
 from pathlib import Path
 from pydantic_settings import BaseSettings
@@ -31,7 +28,7 @@ class Settings(BaseSettings):
     ollama_model: str = Field(default="llama3.2")
 
     # App
-    app_host: str = Field(default="0.0.0.0")
+    app_host: str = Field(default="127.0.0.1")
     app_port: int = Field(default=8000)
     debug: bool = Field(default=False)
 
